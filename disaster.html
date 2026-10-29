@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disaster Management Quiz</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--ink:#1c2733;--mut:#5d6b7a;--ac:#0f5ea8;--acs:#e6f0fa;--ok:#2e7d4f;--no:#b3261e;--ln:#d9e0e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1720;--card:#18222e;--ink:#e8eef5;--mut:#9aa9b8;--ac:#5aa9f0;--acs:#1d3248;--ok:#5fc08a;--no:#ff8a80;--ln:#2b3a4a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:.2em 0}.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:20px;margin:14px 0}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select{padding:11px 12px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit}
+input.w{width:100%}input:focus,select:focus{outline:2px solid var(--ac);border-color:transparent}
+button{font:inherit;cursor:pointer}
+.go{padding:12px 22px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:700}.go:disabled{opacity:.5;cursor:not-allowed}
+.sec{padding:11px 18px;border-radius:10px;border:1px solid var(--ln);background:var(--card);color:var(--ink)}.sec:disabled{opacity:.5}
+.tile{display:block;width:100%;text-align:left;margin:12px 0;padding:18px;border-radius:14px;border:1px solid var(--ln);background:var(--card);color:var(--ink)}
+.tile:hover{border-color:var(--ac)}.tile b{display:block;font-size:1.1rem}.tile span{color:var(--mut);font-size:.92rem}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);color:var(--ink)}
+.opt:hover{border-color:var(--ac)}.opt.sel{border-color:var(--ac);background:var(--acs);font-weight:600}
+.bar{height:6px;border-radius:3px;background:var(--ln);margin:8px 0 2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);transition:width .25s}
+.top{display:flex;justify-content:space-between;font-size:.9rem;color:var(--mut);gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.dots button{width:32px;height:32px;border-radius:8px;border:1px solid var(--ln);background:var(--card);color:var(--ink);font-size:.8rem}
+.dots button.a{background:var(--acs);border-color:var(--ac)}.dots button.c{outline:2px solid var(--ac)}
+.err{color:var(--no);margin:10px 0;font-weight:600}
+.done{text-align:center;padding:30px 10px}.done .big{font-size:3rem}
+.back{background:none;border:0;color:var(--ac);padding:4px 0;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:520px}th,td{padding:9px 10px;border-bottom:1px solid var(--ln);text-align:left}th{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}td.n,th.n{text-align:right}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 12px}.stats b{font-size:1.3rem;display:block}
+body.secure{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.secure img{pointer-events:none}
+#wm{display:none;position:fixed;inset:0;z-index:50;pointer-events:none;background-repeat:repeat}
+body.secure #wm{display:block}
+#toast{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:120;background:var(--no);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;max-width:90%;text-align:center}
+#shield{display:none;position:fixed;inset:0;z-index:99;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:600}
+body.hide #app{visibility:hidden}body.hide #shield{display:flex}
+@media print{body *{display:none!important}body::before{content:"Printing and saving are disabled for this quiz.";display:block;font:20px system-ui;padding:40px}}
+</style></head><body><main id="app"></main><div id="wm" aria-hidden="true"></div><div id="toast" role="alert"></div><div id="shield">The quiz is hidden because the window lost focus or a capture was attempted.<br>Return to this window to continue. The timer keeps running.</div>
+<script>
+/* ================= SETTINGS ================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbww9CZzyGgc8ZeEYbxEGYKYgvGkQn7hCXPlU_Kgg9u1U_b3w8eenn6CKngnPH0vUINqxA/exec";
+const QUIZZES = {
+  DM2: { secs: 30, name: 'Disaster Management Quiz', label: "Disaster Management - Policy & Institutions", hash: 'dm2',
+        sub: 'Disaster profile of India and major events, the Disaster Management Act 2005, institutional framework, national policies, guidelines and plans, and the roles of government, NGOs and international agencies.',
+        bank: [{"id": "P01", "q": "Roughly what share of India's land area is prone to earthquakes of moderate to very high intensity?", "o": ["About 78.6%", "About 18.6%", "About 38.6%", "About 58.6%"]}, {"id": "P02", "q": "India's coastline is about 7,516 km long. Approximately how much of it is prone to cyclones and tsunamis?", "o": ["About 5,700 km", "About 7,200 km", "About 3,200 km", "About 1,500 km"]}, {"id": "P03", "q": "What share of India's cultivable (arable) area is vulnerable to drought?", "o": ["About 18%", "About 68%", "About 88%", "About 38%"]}, {"id": "P04", "q": "Roughly what share of India's land area (about 40 million hectares) is prone to floods and river erosion?", "o": ["About 12%", "About 30%", "About 50%", "About 2%"]}, {"id": "P05", "q": "The Odisha Super Cyclone, which killed about 10,000 people, struck India in which year?", "o": ["1989", "2004", "2013", "1999"]}, {"id": "P06", "q": "The earthquake of 26 January 2001, centred near Bhuj and one of India's deadliest, struck which state?", "o": ["Maharashtra", "Gujarat", "Uttarakhand", "Jammu and Kashmir"]}, {"id": "P07", "q": "The 1984 Bhopal gas tragedy is classified as which type of disaster?", "o": ["A geophysical disaster", "An industrial (chemical) disaster", "A hydro-meteorological disaster", "A biological disaster"]}, {"id": "P08", "q": "The June 2013 disaster in the Kedarnath region of Uttarakhand was mainly which type of disaster?", "o": ["Hydro-meteorological: extreme rainfall causing flash floods and landslides", "Geophysical: a major earthquake", "Biological: an epidemic outbreak", "Industrial: a chemical accident"]}, {"id": "P09", "q": "Which of the following is a geophysical (geological) hazard?", "o": ["Drought", "Flood", "Earthquake", "Cyclone"]}, {"id": "P10", "q": "In India's seismic zoning map, which zone has the highest risk of severe earthquakes?", "o": ["Zone III", "Zone II", "Zone I", "Zone V"]}, {"id": "P11", "q": "The Disaster Management Act, 2005 creates which institutional structure?", "o": ["A three-tier structure: national, state and district authorities", "A two-tier structure: Centre and state only", "A four-tier structure ending at the village council", "A single national authority with no state role"]}, {"id": "P12", "q": "Besides the Prime Minister as chairperson, the NDMA can have not more than how many other members?", "o": ["Five", "Seven", "Eleven", "Nine"]}, {"id": "P13", "q": "The National Executive Committee (NEC) under the Act is chaired by the:", "o": ["Cabinet Secretary", "Principal Secretary to the Prime Minister", "Union Home Secretary", "Chief Secretary of a state"]}, {"id": "P14", "q": "The State Disaster Management Authority (SDMA) is chaired by the:", "o": ["State Home Minister", "Chief Minister of the state", "Chief Secretary of the state", "Governor of the state"]}, {"id": "P15", "q": "Who serves as the ex officio co-chairperson of a District Disaster Management Authority (DDMA)?", "o": ["The Superintendent of Police", "The elected representative of the local authority", "The Chief Secretary", "The Chief Medical Officer"]}, {"id": "P16", "q": "Which section of the Disaster Management Act, 2005 provides for the National Institute of Disaster Management (NIDM)?", "o": ["Section 14", "Section 8", "Section 42", "Section 25"]}, {"id": "P17", "q": "Which fund is meant to support long-term disaster risk reduction (mitigation) projects?", "o": ["National Disaster Response Fund", "State Disaster Response Fund", "Prime Minister's National Relief Fund", "National Disaster Mitigation Fund"]}, {"id": "P18", "q": "The Disaster Management (Amendment) Act, 2025 allows state governments to set up an Urban Disaster Management Authority for:", "o": ["Only cities with a population above one crore", "State capitals and cities that have a municipal corporation", "Every village panchayat in the state", "Only coastal towns"]}, {"id": "P19", "q": "After the 2025 amendment, which body directly prepares the national disaster management plan?", "o": ["The National Executive Committee", "The Ministry of Finance", "The National Disaster Management Authority", "The National Institute of Disaster Management"]}, {"id": "P20", "q": "Which two bodies were given statutory status by the 2025 amendment?", "o": ["National Crisis Management Committee and High Level Committee", "National Executive Committee and State Executive Committee", "NDRF and SDRF", "NIDM and NDRF"]}, {"id": "P21", "q": "Which feature is essential for an event to be a 'disaster' under the Act?", "o": ["Its nature or magnitude is beyond the coping capacity of the affected community", "It must be caused only by natural forces", "It must be declared by the Prime Minister", "It must affect more than one state"]}, {"id": "P22", "q": "What is the primary function of the NDMA?", "o": ["Conducting rescue operations directly in every district", "Collecting taxes for disaster relief", "Training only army and police officers", "Laying down policies, plans and guidelines for disaster management"]}, {"id": "P23", "q": "Under Section 44 of the Act, the National Disaster Response Force (NDRF) works under the general superintendence, direction and control of the:", "o": ["NIDM", "NDMA", "State governments", "Ministry of Defence"]}, {"id": "P24", "q": "What is the role of the National Executive Committee (NEC)?", "o": ["To elect the members of the NDMA", "To assist the NDMA and ensure compliance with its directions", "To collect funds for disaster mitigation", "To replace State Authorities during disasters"]}, {"id": "P25", "q": "Which bodies are 'local authorities' that must carry out disaster management in their areas under the Act?", "o": ["Panchayati Raj institutions, municipalities and cantonment boards", "Only registered NGOs", "Only central government ministries", "Only the police and armed forces"]}, {"id": "P26", "q": "Which authority prepares the disaster management plan for a district?", "o": ["The National Institute of Disaster Management", "The National Disaster Management Authority", "The National Executive Committee", "The District Disaster Management Authority"]}, {"id": "P27", "q": "The National Crisis Management Committee (NCMC) is chaired by the:", "o": ["Cabinet Secretary", "Chief Justice of India", "Prime Minister", "Union Home Secretary"]}, {"id": "P28", "q": "The High Level Committee, which approves central financial assistance to states for disasters, is chaired by the:", "o": ["Union Home Minister", "Union Finance Minister", "Cabinet Secretary", "Prime Minister"]}, {"id": "P29", "q": "The vision of the National Policy on Disaster Management, 2009 is to build:", "o": ["A system where only states handle disasters", "A safe and disaster resilient India through a culture of prevention, mitigation, preparedness and response", "A fully relief-based system run only by the armed forces", "An India free from all natural hazards"]}, {"id": "P30", "q": "India's National Disaster Management Plan is aligned with which international framework?", "o": ["The Kyoto Protocol", "The Geneva Conventions", "The Sendai Framework for Disaster Risk Reduction", "The Paris Agreement on trade"]}, {"id": "P31", "q": "The Sendai Framework for Disaster Risk Reduction covers which period?", "o": ["2020-2040", "1990-2000", "2015-2030", "2005-2015"]}, {"id": "P32", "q": "The Sendai Framework replaced which earlier global framework?", "o": ["The Yokohama Strategy of 1994", "The Kyoto Protocol", "The Millennium Declaration", "The Hyogo Framework for Action 2005-2015"]}, {"id": "P33", "q": "The idea of 'Build Back Better' is linked with which priority of the Sendai Framework?", "o": ["Priority 3: investing in disaster risk reduction for resilience", "Priority 2: strengthening disaster risk governance", "Priority 1: understanding disaster risk", "Priority 4: enhancing preparedness for effective response and to build back better in recovery, rehabilitation and reconstruction"]}, {"id": "P34", "q": "India's first-ever National Disaster Management Plan was released in:", "o": ["2013", "2006", "2009", "2016"]}, {"id": "P35", "q": "Which role is typical of NGOs in disaster management?", "o": ["Making national disaster policy", "Issuing binding orders under the Act", "Community-level relief, rehabilitation, awareness and mobilising volunteers alongside the government", "Commanding the armed forces during disasters"]}, {"id": "P36", "q": "What is the aim of the Aapda Mitra scheme?", "o": ["To train foreign disaster workers", "To train community volunteers to respond to disasters in their own areas", "To insure farmers against crop loss", "To build embankments along rivers"]}, {"id": "P37", "q": "The Coalition for Disaster Resilient Infrastructure (CDRI), launched in 2019, was initiated by:", "o": ["The World Bank", "Japan", "India", "The European Union"]}, {"id": "P38", "q": "Which UN body is the focal point for disaster risk reduction and supports the implementation of the Sendai Framework?", "o": ["UNICEF", "ILO", "UNDRR", "UNESCO"]}, {"id": "P39", "q": "For general-category states, what is the Centre:State sharing ratio for contributions to the State Disaster Response Fund (SDRF)?", "o": ["75:25", "60:40", "90:10", "50:50"]}, {"id": "P40", "q": "Under which operation did India send NDRF teams to Turkey after the February 2023 earthquake?", "o": ["Operation Maitri", "Operation Ganga", "Operation Dost", "Operation Raahat"]}] }
+};
+const LEAVE_PENALTY = 20;   // seconds deducted every time the student leaves the quiz window / switches apps
+/* secs = time allowed for EACH question, in seconds (change per quiz above) */
+/* ============================================ */
+const $ = document.getElementById('app');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const post = async body => { const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); return r.json(); };
+let st = { view: 'start', qz: 'DM2', name: '', reg: '', qs: [], i: 0, ans: {}, err: '', busy: false };
+
+function begin() {
+  const name = document.getElementById('nm').value.trim().replace(/\s+/g, ' ');
+  const reg = document.getElementById('rg').value.trim().toUpperCase().replace(/\s+/g, '');
+  st.name = name; st.reg = reg;
+  if (name.length < 2) { st.err = 'Please enter your full name.'; return render(); }
+  if (!/^[A-Z0-9\-\/]{4,20}$/.test(reg)) { st.err = 'Please enter a valid register number (letters and digits only).'; return render(); }
+  const bank = QUIZZES[st.qz].bank;
+  st.qs = shuffle(bank).map(q => ({ id: q.id, q: q.q, opts: shuffle(q.o.map((t, k) => ({ t, k }))) }));
+  Object.assign(st, { i: 0, ans: {}, err: '', view: 'quiz', leaves: 0 }); away = false; startT(); render();
+}
+let tmr = 0;
+function stopT() { clearInterval(tmr); tmr = 0; }
+function startT() {
+  stopT(); st.deadline = Date.now() + QUIZZES[st.qz].secs * 1000;
+  tmr = setInterval(tickT, 250);
+}
+function leftT() { return Math.max(0, Math.ceil((st.deadline - Date.now()) / 1000)); }
+function tickT() {
+  if (st.view !== 'quiz') return stopT();
+  const l = leftT(), T = QUIZZES[st.qz].secs;
+  const t = document.getElementById('tm'), b = document.getElementById('tb');
+  if (t) { t.textContent = l + 's'; t.style.color = l <= 10 ? 'var(--no)' : ''; }
+  if (b) { b.style.width = (l / T * 100) + '%'; b.style.background = l <= 10 ? 'var(--no)' : ''; }
+  if (l <= 0) { stopT(); if (st.i < st.qs.length - 1) go(1); else submit(true); }
+}
+function choose(k) { st.ans[st.qs[st.i].id] = k; render(); }
+function go(d) { st.i = Math.max(0, Math.min(st.qs.length - 1, st.i + d)); startT(); render(); }
+async function submit(auto) {
+  if (st.busy) return;
+  const left = st.qs.length - Object.keys(st.ans).length;
+  muteAway = true;
+  const okSubmit = auto || confirm(left > 0 ? left + ' question(s) are unanswered. Submit anyway?' : 'Submit your answers? You cannot retake the quiz.');
+  setTimeout(() => { muteAway = false; }, 500);
+  if (!okSubmit) return;
+  stopT(); st.busy = true; st.err = ''; render();
+  try {
+    const j = await post({ action: 'submit', name: st.name, reg: st.reg, answers: st.ans, total: st.qs.length, quiz: 'DM2' });
+    if (!j.ok) throw new Error(j.error || 'Submission failed');
+    st.view = 'done';
+  } catch (e) { st.err = 'Could not submit: ' + e.message + '. Check your internet connection and press Submit again.'; }
+  st.busy = false; render();
+}
+window.addEventListener('beforeunload', e => { if (st.view === 'quiz') { e.preventDefault(); e.returnValue = ''; } });
+
+function render() {
+  secure();
+  if (st.view === 'start') {
+    const Q = QUIZZES[st.qz];
+    $.innerHTML = `<h1>${Q.name}</h1><p class="mut">${Q.sub}</p>
+    <div class="card"><label for="nm">Full name</label><input class="w" id="nm" type="text" autocomplete="off" value="${esc(st.name)}">
+    <label for="rg">Register number</label><input class="w" id="rg" type="text" autocomplete="off" value="${esc(st.reg)}">
+    ${st.err ? `<div class="err">${esc(st.err)}</div>` : ''}
+    <ul class="mut"><li>${Q.bank.length} multiple-choice questions, shown in random order.</li><li>Each question has a time limit of ${Q.secs} seconds. When time is up, the quiz moves to the next question automatically, and you cannot go back.</li><li>Screenshots, copying, printing and switching windows are blocked during the quiz. Your name and register number appear on every question screen, so any captured image can be traced to you.</li><li>Every time you minimise the page or switch to another app, ${LEAVE_PENALTY} seconds are deducted from the time of that question.</li><li>You can attempt this quiz only once. Your marks will be shared by your staff.</li></ul>
+    <button class="go" onclick="begin()">Start quiz</button></div>`;
+  } else if (st.view === 'quiz') {
+    const q = st.qs[st.i], n = st.qs.length, done = Object.keys(st.ans).length, T = QUIZZES[st.qz].secs, l = st.busy || !st.deadline ? 0 : leftT();
+    $.innerHTML = `<div class="top"><span>${esc(st.name)} · ${esc(st.reg)}</span><span>${done}/${n} answered</span></div>
+    <div class="bar"><i style="width:${(st.i + 1) / n * 100}%"></i></div>
+    <div class="card"><div class="top" style="font-size:.85rem"><span>${QUIZZES[st.qz].name} · Question ${st.i + 1} of ${n}</span><b>⏱ <span id="tm" style="${l <= 10 ? 'color:var(--no)' : ''}">${l}s</span></b></div>
+    <div class="bar"><i id="tb" style="width:${l / T * 100}%;${l <= 10 ? 'background:var(--no)' : ''}"></i></div>
+    <p style="font-size:1.1rem;font-weight:600">${esc(q.q)}</p>
+    ${q.opts.map((o, x) => `<button class="opt ${st.ans[q.id] === o.k ? 'sel' : ''}" onclick="choose(${o.k})" ${st.busy ? 'disabled' : ''}><b>${'ABCD'[x]}.</b> ${esc(o.t)}</button>`).join('')}
+    ${st.err ? `<div class="err">${esc(st.err)}</div>` : ''}
+    <div class="nav"><span class="mut" style="font-size:.85rem;align-self:center">Time is limited. You cannot go back.</span>
+    ${st.i < n - 1 ? '<button class="go" onclick="go(1)">Next →</button>' : `<button class="go" onclick="submit()" ${st.busy ? 'disabled' : ''}>${st.busy ? 'Submitting…' : 'Submit quiz'}</button>`}</div></div>`;
+  } else {
+    $.innerHTML = `<div class="card done"><div class="big">✅</div><h1>Response submitted</h1><p>Thank you, <b>${esc(st.name)}</b> (${esc(st.reg)}).<br>Your answers have been recorded. Your marks will be shared by your staff.</p></div>`;
+  }
+}
+/* ---- screenshot / copy deterrents (active only while a quiz is running) ---- */
+const inQuiz = () => st.view === 'quiz';
+const hideQ = on => document.body.classList.toggle('hide', on && inQuiz());
+let capT = 0;
+function flash(ms) { hideQ(true); clearTimeout(capT); capT = setTimeout(() => { if (document.hasFocus() && !document.hidden) hideQ(false); }, ms); }
+function watermark() {
+  const x = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+  const txt = x((st.name || '') + ' · ' + (st.reg || ''));
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="170"><text x="150" y="85" text-anchor="middle" transform="rotate(-25 150 85)" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="rgb(120,120,120)" fill-opacity="0.38">' + txt + '</text></svg>';
+  document.getElementById('wm').style.backgroundImage = 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+}
+function secure() { document.body.classList.toggle('secure', inQuiz()); if (inQuiz()) watermark(); if (!inQuiz()) hideQ(false); }
+['contextmenu', 'copy', 'cut', 'paste', 'dragstart', 'selectstart'].forEach(t => document.addEventListener(t, e => { if (inQuiz()) e.preventDefault(); }));
+let away = false, muteAway = false, toastT = 0;
+function toast(m) { const e = document.getElementById('toast'); e.textContent = m; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => { e.style.display = 'none'; }, 4000); }
+function leave() {
+  if (!inQuiz() || away || muteAway || st.busy) return;
+  away = true; st.leaves = (st.leaves || 0) + 1;
+  st.deadline -= LEAVE_PENALTY * 1000;   // time penalty
+  hideQ(true);
+}
+function back() {
+  if (document.hidden || !document.hasFocus()) return;
+  const was = away; away = false; hideQ(false);
+  if (was && inQuiz()) { toast('You left the quiz window: ' + LEAVE_PENALTY + ' seconds deducted (' + st.leaves + ' time' + (st.leaves > 1 ? 's' : '') + ').'); tickT(); }
+}
+window.addEventListener('blur', leave);
+window.addEventListener('focus', back);
+document.addEventListener('visibilitychange', () => document.hidden ? leave() : back());
+window.addEventListener('pagehide', leave);
+function onKey(e) {
+  if (!inQuiz()) return;
+  const k = (e.key || '').toLowerCase(), c = e.ctrlKey || e.metaKey;
+  if (k === 'printscreen' || k === 'snapshot' || e.code === 'PrintScreen') {
+    try { navigator.clipboard.writeText(' '); } catch (x) {}
+    flash(2500); e.preventDefault(); return;
+  }
+  if (e.metaKey && e.shiftKey && (k === 's' || k === '3' || k === '4' || k === '5')) { flash(2500); e.preventDefault(); return; }
+  if (k === 'f12' || (c && e.shiftKey && ['i', 'j', 'c', 's'].includes(k)) || (c && ['p', 's', 'u', 'c', 'x', 'a'].includes(k))) { e.preventDefault(); if (k === 'p') flash(1500); }
+}
+document.addEventListener('keydown', onKey, true);
+document.addEventListener('keyup', onKey, true);
+render();
+</script></body></html>
